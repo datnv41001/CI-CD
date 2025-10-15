@@ -70,3 +70,4 @@ jobs:
           echo "::endgroup::"
       - name: ✅ Mark success
         run: echo "Fake deploy to ${ENVIRONMENT} completed for ${COMMIT_SHA}"
+        
