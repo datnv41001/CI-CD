@@ -1,73 +1,46 @@
-name: CI + Fake Deploy
+name: CI + Fake Deploy (Demo Mode)
 
 on:
   push:
-    branches: [develop, main]
+    branches: [main, develop]
   pull_request:
-    branches: [develop, main]
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [main, develop]
 
 jobs:
   ci:
-    name: CI (lint + test + build)
+    name: 🧪 CI Demo (no code)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 18 }
-      - name: 📦 Install deps
+      - name: 🪄 Simulate build pipeline
         run: |
-          if [ -f package-lock.json ] || [ -f package.json ]; then
-            npm ci
-          else
-            echo "No package.json found, skipping install."
-          fi
-      - name: 🔍 Lint
-        run: npm run lint --if-present
-      - name: 🧪 Test
-        run: npm test --if-present
-      - name: 🏗️ Build
-        run: npm run build --if-present
+          echo "=== Step 1: Lint ==="
+          echo "No source code -> skip lint"
+          echo "=== Step 2: Test ==="
+          echo "No tests -> skip test"
+          echo "=== Step 3: Build ==="
+          mkdir -p dist
+          echo "Hello from CI pipeline!" > dist/output.txt
+          echo "Build done."
       - name: 📦 Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-dist
-          path: |
-            dist
-            build
-            !**/*.map
-          if-no-files-found: ignore
+          name: demo-dist
+          path: dist
 
   fake_deploy:
-    name: Fake Deploy (no server)
-    if: github.event_name == 'push'
+    name: 🚀 Fake Deploy (no server)
     needs: ci
     runs-on: ubuntu-latest
-    env:
-      COMMIT_SHA: ${{ github.sha }}
-      BRANCH: ${{ github.ref_name }}
-      ENVIRONMENT: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     steps:
       - name: 📥 Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: app-dist
+          name: demo-dist
           path: ./release
-      - name: 🚀 Simulate deployment
+      - name: 🔧 Simulate deployment steps
         run: |
-          echo "::group::Fake Deploy Log"
-          echo "Env         : ${ENVIRONMENT}"
-          echo "Branch      : ${BRANCH}"
-          echo "Commit      : ${COMMIT_SHA}"
-          echo "Artifact    : ./release"
-          echo "1) Would rsync artifact to /var/www/app"
-          echo "2) Would run DB migrations (skipped)"
-          echo "3) Would restart app service (skipped)"
-          sleep 1
-          echo "::endgroup::"
-      - name: ✅ Mark success
-        run: echo "Fake deploy to ${ENVIRONMENT} completed for ${COMMIT_SHA}"
-        
+          echo "Deploying artifact to fake server..."
+          ls -la ./release
+          cat ./release/output.txt
+          echo "Deployment complete ✅"
